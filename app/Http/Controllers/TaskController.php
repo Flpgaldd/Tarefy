@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskStatusRequest;
 use App\Http\Requests\UpdateTaskRequest;
 
 class TaskController extends Controller
@@ -39,7 +40,11 @@ class TaskController extends Controller
         $user = Auth::user();
        $task = $user->tasks()->create([
             'title' => $request->title,
-            'due_datetime' => $request->due_datetime
+            'due_datetime' => $request->due_datetime,
+            // 🎯 ALTERADO: status e prioridade validados agora são gravados
+            // explicitamente junto com os demais dados da nova tarefa.
+            'status' => $request->status,
+            'priority' => $request->priority,
             ]);
 
         if ($request->filled('reminder_datetime')) {
@@ -62,7 +67,20 @@ class TaskController extends Controller
             'title' => $request->title,
             'due_datetime' => $request->due_datetime,
             'status' => $request->status,
+            // 🎯 ALTERADO: a edição passa a persistir a prioridade selecionada.
+            'priority' => $request->priority,
         ]);
+
+        // 🎯 ALTERADO: a edição mantém no máximo um lembrete futuro por tarefa.
+        // O agendamento antigo é substituído pelo novo; deixar o campo vazio
+        // remove um lembrete que ainda não foi disparado.
+        $task->reminders()->delete();
+
+        if ($request->filled('reminder_datetime')) {
+            $task->reminders()->create([
+                'reminder_datetime' => $request->reminder_datetime,
+            ]);
+        }
 
         if($task)
         {
@@ -71,12 +89,35 @@ class TaskController extends Controller
             return redirect()->route('tasks.index')->with('error', 'Ocorreu um erro ao atualizar a tarefa.');
         }
     }
+
+    /**
+     * 🎯 NOVO: atualiza somente o status pelo seletor da listagem, sem exigir
+     * título, vencimento e prioridade novamente. A policy impede alterações
+     * em tarefas pertencentes a outro usuário.
+     */
+    public function updateStatus(UpdateTaskStatusRequest $request, Task $task)
+    {
+        Gate::authorize('update', $task);
+
+        $task->update([
+            'status' => $request->status,
+        ]);
+
+        return back()->with('success', 'Status da tarefa atualizado com sucesso!');
+    }
+
     public function edit(Task $task){
         
     Gate::authorize('edit', $task);
 
         
-        return view('tasks.edit', compact('task'));
+        // 🎯 ALTERADO: o lembrete atual é enviado ao formulário para que possa
+        // ser visualizado, substituído ou removido durante a edição.
+        $reminder = $task->reminders()
+            ->orderByDesc('reminder_datetime')
+            ->first();
+
+        return view('tasks.edit', compact('task', 'reminder'));
     }
 
     public function destroy(Task $task)
@@ -95,6 +136,7 @@ class TaskController extends Controller
     public function search(Request $request)
 {
     $status = $request->query('status');
+    $priority = $request->query('priority');
     $title  = $request->query('title');
     $user   = Auth::user();
 
@@ -109,6 +151,12 @@ class TaskController extends Controller
     if ($status && $status !== 'all') {
         // Se preferir usar o valor exato enviado pelo formulário:
         $query->where('status', $status);
+    }
+
+    // 🎯 ALTERADO: o filtro de "Minhas Tarefas" também aceita prioridade,
+    // usando somente os quatro valores definidos no model.
+    if ($priority && array_key_exists($priority, Task::PRIORITY_OPTIONS)) {
+        $query->where('priority', $priority);
     }
 
     $tasks = $query->orderBy('due_datetime', 'asc')->get();

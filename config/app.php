@@ -65,7 +65,10 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // 🎯 ALTERADO: o fuso deixou de ficar fixo em UTC. Os campos
+    // `datetime-local` enviados pelo navegador representam o horário local do
+    // usuário; por isso toda a aplicação usa Brasília como padrão.
+    'timezone' => env('APP_TIMEZONE', 'America/Sao_Paulo'),
 
     /*
     |--------------------------------------------------------------------------

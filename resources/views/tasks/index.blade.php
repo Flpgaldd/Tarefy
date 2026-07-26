@@ -56,6 +56,33 @@
                             <input type="datetime-local" name="reminder_datetime"
                                 class="border-ink/20 bg-paper text-ink focus:border-ember focus:ring-ember rounded-md shadow-sm">
                         </div>
+                        <div x-data="{ priority: '{{ old('priority', \App\Models\Task::PRIORITY_MEDIUM) }}' }">
+                            {{-- 🎯 ALTERADO: prioridade adicionada à criação da tarefa.
+                                 O texto do select muda de cor conforme o nível escolhido
+                                 e o valor selecionado é enviado para a coluna `priority`. --}}
+                            <label for="priority" class="block font-medium text-sm text-ink mb-1">
+                                Prioridade
+                            </label>
+                            <select
+                                id="priority"
+                                name="priority"
+                                x-model="priority"
+                                :class="{
+                                    'text-green-600': priority === 'low',
+                                    'text-yellow-600': priority === 'medium',
+                                    'text-orange-600': priority === 'high',
+                                    'text-red-700': priority === 'urgent'
+                                }"
+                                class="border-ink/20 bg-paper focus:ring-ember focus:border-ember rounded-md shadow-sm font-semibold">
+                                {{-- 🎯 ALTERADO: números e hífens removidos dos
+                                     rótulos; os valores salvos no banco permanecem iguais. --}}
+                                <option class="text-green-600" value="low">Baixa</option>
+                                <option class="text-yellow-600" value="medium">Média</option>
+                                <option class="text-orange-600" value="high">Alta</option>
+                                <option class="text-red-700" value="urgent">Urgente!</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('priority')" class="mt-2" />
+                        </div>
                     </div>
                     <input type="hidden" name="status" value="Pendente">
 
@@ -86,6 +113,23 @@
                                 <option value="Pendente" {{ request('status') == 'Pendente' ? 'selected' : '' }}>Pendente</option>
                                 <option value="Fazendo" {{ request('status') == 'Fazendo' ? 'selected' : '' }}>Fazendo</option>
                                 <option value="Concluída" {{ request('status') == 'Concluída' ? 'selected' : '' }}>Concluída</option>
+                            </select>
+                        </div>
+                        <div>
+                            {{-- 🎯 ALTERADO: prioridade adicionada ao filtro de
+                                 "Minhas Tarefas" e combinada com status e busca. --}}
+                            <label for="filter-priority" class="block text-sm font-medium text-ink mb-1">
+                                Prioridade
+                            </label>
+                            <select
+                                name="priority"
+                                id="filter-priority"
+                                class="border-ink/20 bg-paper text-ink focus:ring-ember focus:border-ember rounded-md shadow-sm text-sm">
+                                <option value="all">Todas</option>
+                                <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Baixa</option>
+                                <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Média</option>
+                                <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>Alta</option>
+                                <option value="urgent" {{ request('priority') === 'urgent' ? 'selected' : '' }}>Urgente!</option>
                             </select>
                         </div>
                         <div>
@@ -148,17 +192,47 @@
                         'Concluída' => 'border-ink',
                         default => 'border-ink/20',
                     };
-                    $badgeClass = match($task->status) {
-                        'Fazendo' => 'bg-ember text-paper',
-                        'Concluída' => 'bg-ink text-paper',
-                        default => 'bg-paper border border-ink text-ink',
+                    // 🎯 ALTERADO: classes específicas deixam o seletor de status
+                    // maior, mais legível e com cor, ponto e borda coerentes.
+                    $statusSelectClass = match($task->status) {
+                        'Fazendo' => 'border-orange-300 bg-orange-50 text-orange-700',
+                        'Concluída' => 'border-green-300 bg-green-50 text-green-700',
+                        default => 'border-slate-300 bg-slate-50 text-slate-700',
+                    };
+                    $statusDotClass = match($task->status) {
+                        'Fazendo' => 'bg-orange-500',
+                        'Concluída' => 'bg-green-500',
+                        default => 'bg-slate-500',
                     };
                 @endphp
                 <div class="bg-paper border-l-4 {{ $borderColor }} rounded-lg shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
                             <strong class="text-ink text-base {{ $task->status === 'Concluída' ? 'line-through text-ink/50' : '' }}">{{ $task->title }}</strong>
-                            <span class="text-[11px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full {{ $badgeClass }}">{{ $task->status }}</span>
+                            {{-- 🎯 ALTERADO: o badge fixo de status virou um select
+                                 que envia a alteração automaticamente para uma rota
+                                 PATCH exclusiva ao escolher um dos três status. --}}
+                            <form method="POST" action="{{ route('tasks.status.update', $task) }}" class="relative inline-flex items-center">
+                                @csrf
+                                @method('PATCH')
+                                <label for="task-status-{{ $task->id }}" class="sr-only">
+                                    Alterar status de {{ $task->title }}
+                                </label>
+                                <span class="pointer-events-none absolute start-3 w-2 h-2 rounded-full {{ $statusDotClass }}"></span>
+                                <select
+                                    id="task-status-{{ $task->id }}"
+                                    name="status"
+                                    onchange="this.form.submit()"
+                                    class="min-w-36 border-2 rounded-lg py-2 ps-7 pe-9 text-xs font-bold uppercase tracking-wider shadow-sm cursor-pointer transition hover:shadow-md focus:ring-2 focus:ring-ember focus:border-ember {{ $statusSelectClass }}">
+                                    <option value="Pendente" {{ $task->status === 'Pendente' ? 'selected' : '' }}>Pendente</option>
+                                    <option value="Fazendo" {{ $task->status === 'Fazendo' ? 'selected' : '' }}>Fazendo</option>
+                                    <option value="Concluída" {{ $task->status === 'Concluída' ? 'selected' : '' }}>Concluída</option>
+                                </select>
+                            </form>
+
+                            {{-- 🎯 ALTERADO: prioridade exibida ao lado do status
+                                 com a cor padronizada pelo componente compartilhado. --}}
+                            <x-task-priority :priority="$task->priority" class="text-xs" />
                             @if($isLate)
                                 <span class="text-[11px] font-bold uppercase tracking-widest text-ember-dark">⚠ Atrasada</span>
                             @endif

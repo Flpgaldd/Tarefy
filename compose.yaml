@@ -4,6 +4,9 @@ x-app-service: &app-service
   image: tarefy-app:local
   env_file:
     - .env.docker
+  # 🎯 ALTERADO: PHP, fila e agendador compartilham o horário de Brasília.
+  environment:
+    TZ: "America/Sao_Paulo"
   volumes:
     - tarefy-resources:/var/www/html/resources
     - tarefy-storage:/var/www/html/storage
@@ -20,6 +23,9 @@ services:
       context: .
       target: app
     environment:
+      # 🎯 ALTERADO: este bloco substitui o `environment` herdado, portanto o
+      # fuso também precisa ser declarado diretamente no serviço principal.
+      TZ: "America/Sao_Paulo"
       RUN_MIGRATIONS: "true"
       VITE_DEV_SERVER_URL: "http://localhost:5173"
     healthcheck:
@@ -36,6 +42,9 @@ services:
       target: web
     ports:
       - "8080:80"
+    # 🎯 ALTERADO: os logs do servidor web seguem o mesmo fuso da aplicação.
+    environment:
+      TZ: "America/Sao_Paulo"
     volumes:
       - tarefy-avatars:/var/www/html/public/avatars:ro
     depends_on:
@@ -58,6 +67,8 @@ services:
     working_dir: /app
     command: node docker/vite/dev.mjs
     environment:
+      # 🎯 ALTERADO: mantém os horários exibidos pelo processo de desenvolvimento.
+      TZ: "America/Sao_Paulo"
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "5173:5173"
@@ -90,6 +101,9 @@ services:
     image: mysql:8.4
     env_file:
       - .env.docker
+    # 🎯 ALTERADO: o relógio do MySQL acompanha o horário de Brasília.
+    environment:
+      TZ: "America/Sao_Paulo"
     volumes:
       - tarefy-mysql:/var/lib/mysql
     healthcheck:

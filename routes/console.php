@@ -12,11 +12,18 @@ Artisan::command('inspire', function () {
 
 Schedule::call(function (): void {
     TaskReminder::query()
-        ->with('task')
+        ->with('task.user')
         ->where('reminder_datetime', '<=', now())
         ->each(function (TaskReminder $reminder): void {
             if ($reminder->task) {
-                SendReminderTask::dispatch($reminder->task->title);
+                // 🎯 ALTERADO: o job recebe usuário, tarefa, título e vencimento
+                // para gerar a notificação persistente exibida dentro do site.
+                SendReminderTask::dispatch(
+                    userId: $reminder->task->user_id,
+                    taskId: $reminder->task->id,
+                    taskTitle: $reminder->task->title,
+                    dueAt: $reminder->task->due_datetime?->toIso8601String(),
+                );
             }
 
             $reminder->delete();

@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 🎯 ALTERADO: impede que sino, dropdown e toast apareçam por um instante
+   antes do Alpine inicializar e assumir o controle de x-show. */
+[x-cloak] {
+    display: none !important;
+}

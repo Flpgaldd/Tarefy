@@ -30,16 +30,18 @@
                 {{-- Prévia: mostra a foto atual do usuário; se ele escolher um
                      arquivo novo, troca pra prévia dele em tempo real (via Alpine),
                      sem precisar salvar o formulário pra ver como vai ficar. --}}
+                {{-- 🎯 ALTERADO: tanto a foto atual quanto o fallback da prévia
+                     agora possuem borda branca no lugar da borda cinza. --}}
                 <div class="relative w-20 h-20 shrink-0">
                     <img
                         :src="preview ?? '{{ $user->avatar_url ?? '' }}'"
                         x-show="preview || {{ $user->avatar_url ? 'true' : 'false' }}"
-                        class="w-20 h-20 rounded-full object-cover border-2 border-ink/10"
+                        class="w-20 h-20 rounded-full object-cover border-2 border-white"
                         alt="{{ __('Foto de perfil') }}">
 
                     <div
                         x-show="!preview && {{ $user->avatar_url ? 'false' : 'true' }}"
-                        class="w-20 h-20 rounded-full bg-ember border-2 border-ink/10 flex items-center justify-center">
+                        class="w-20 h-20 rounded-full bg-ember border-2 border-white flex items-center justify-center">
                         <span class="text-xl font-bold text-ink">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </span>

@@ -38,9 +38,23 @@ class ValidTaskDueDate implements ValidationRule
         }
 
         try {
-            $date = Carbon::createFromFormat('Y-m-d\TH:i', $value);
+            // 🎯 ALTERADO: o valor sem offset enviado por `datetime-local` é
+            // interpretado explicitamente no fuso configurado para a aplicação.
+            $date = Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $value,
+                config('app.timezone'),
+            );
         } catch (\Throwable $e) {
             $fail('O campo :attribute deve ser uma data válida.');
+
+            return;
+        }
+
+        // 🎯 ALTERADO: a comparação usa o mesmo fuso e precisão de minutos do
+        // campo HTML, evitando a antiga diferença artificial de três horas.
+        if ($date->lessThan(now()->startOfMinute())) {
+            $fail('A data de vencimento precisa ser igual ou posterior ao horário atual.');
 
             return;
         }

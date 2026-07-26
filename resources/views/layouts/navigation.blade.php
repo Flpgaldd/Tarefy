@@ -1,6 +1,15 @@
 {{-- 🎨 ALTERADO: nav de bg-white/dark:bg-gray-800 para bg-ink com texto branco.
      É o principal "grande bloco estrutural preto" pedido no briefing — fica fixo
      em todas as páginas e ancora a identidade visual. --}}
+{{-- 🎯 ALTERADO: os dados do usuário são preparados uma única vez para o header.
+     O nome completo continua salvo normalmente no banco, mas a navegação exibe
+     somente o primeiro nome e usa sua inicial quando não existe foto de perfil. --}}
+@php
+    $navigationUser = Auth::user();
+    $navigationFirstName = preg_split('/\s+/', trim($navigationUser->name))[0] ?? 'Usuário';
+    $navigationAvatarInitial = mb_strtoupper(mb_substr($navigationFirstName, 0, 1));
+@endphp
+
 <nav x-data="{ open: false }" class="bg-ink border-b border-ink-soft">
     <!-- Primary Navigation Menu -->
     <div class="max-w-2x1 mx-auto px-3 sm:px-3 lg:px-4">
@@ -31,6 +40,10 @@
                 </div>
             </div>
 
+            {{-- 🎯 ALTERADO: sino global inserido antes do nome e da foto do
+                 usuário. No mobile ele permanece ao lado do menu hambúrguer. --}}
+            @include('layouts.notifications')
+
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
@@ -38,7 +51,26 @@
                         {{-- 🎨 ALTERADO: botão do usuário em texto branco sobre preto,
                              com hover laranja em vez de cinza. --}}
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-paper bg-ink hover:text-ember focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+                            {{-- 🎯 ALTERADO: avatar circular adicionado ao lado do nome no
+                                 header desktop. Sem foto, o círculo mostra a inicial do
+                                 primeiro nome e mantém o mesmo destaque laranja do tema. --}}
+                            {{-- 🎯 ALTERADO: a borda cinza do avatar foi substituída por
+                                 uma borda branca para destacar a foto sobre o header preto. --}}
+                            <span class="w-8 h-8 rounded-full bg-ember border-2 border-white flex items-center justify-center overflow-hidden shrink-0">
+                                @if ($navigationUser->avatar_url)
+                                    <img
+                                        src="{{ $navigationUser->avatar_url }}"
+                                        alt="Foto de perfil de {{ $navigationFirstName }}"
+                                        class="w-full h-full object-cover"
+                                    >
+                                @else
+                                    <span class="text-xs font-bold text-ink">
+                                        {{ $navigationAvatarInitial }}
+                                    </span>
+                                @endif
+                            </span>
+
+                            <div class="ms-2">{{ $navigationFirstName }}</div>
 
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -91,9 +123,29 @@
         <!-- Responsive Settings Options -->
         {{-- 🎨 ALTERADO: bloco de identificação do usuário (mobile) em branco sobre preto. --}}
         <div class="pt-4 pb-1 border-t border-ink-soft">
-            <div class="px-4">
-                <div class="font-medium text-base text-paper">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-paper/60">{{ Auth::user()->email }}</div>
+            {{-- 🎯 ALTERADO: a identificação no menu mobile replica o avatar
+                 circular e o primeiro nome usados no header desktop. --}}
+            <div class="px-4 flex items-center gap-3">
+                {{-- 🎯 ALTERADO: a versão mobile também usa borda branca para
+                     manter o mesmo acabamento visual do avatar no desktop. --}}
+                <span class="w-10 h-10 rounded-full bg-ember border-2 border-white flex items-center justify-center overflow-hidden shrink-0">
+                    @if ($navigationUser->avatar_url)
+                        <img
+                            src="{{ $navigationUser->avatar_url }}"
+                            alt="Foto de perfil de {{ $navigationFirstName }}"
+                            class="w-full h-full object-cover"
+                        >
+                    @else
+                        <span class="text-sm font-bold text-ink">
+                            {{ $navigationAvatarInitial }}
+                        </span>
+                    @endif
+                </span>
+
+                <div>
+                    <div class="font-medium text-base text-paper">{{ $navigationFirstName }}</div>
+                    <div class="font-medium text-sm text-paper/60">{{ $navigationUser->email }}</div>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">

@@ -35,6 +35,15 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
+            @if (Route::has('register'))
+                {{-- 🎯 ALTERADO: link "Registrar conta" adicionado à esquerda de
+                     "Esqueceu a senha?", preservando o alinhamento, as cores e
+                     o espaçamento que a área de ações do login já possuía. --}}
+                <a class="me-4 underline text-sm text-ink/60 hover:text-ember-dark rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ember" href="{{ route('register') }}">
+                    Registrar conta
+                </a>
+            @endif
+
             @if (Route::has('password.request'))
                 {{-- 🎨 ALTERADO: link sublinhado de cinza/indigo para text-ink/60,
                      hover em ember-dark e anel de foco em ember. --}}

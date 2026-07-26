@@ -16,7 +16,9 @@
 
             {{-- ===================== FOTO DE PERFIL ===================== --}}
             <div class="bg-ink px-6 pt-10 pb-16 flex flex-col items-center">
-                <div class="w-28 h-28 rounded-full bg-ember border-4 border-ink-soft flex items-center justify-center overflow-hidden">
+                {{-- 🎯 ALTERADO: a borda cinza da foto principal do perfil foi
+                     trocada por branca, seguindo o novo padrão dos avatares. --}}
+                <div class="w-28 h-28 rounded-full bg-ember border-4 border-white flex items-center justify-center overflow-hidden">
                     @if($user->avatar_url)
                         <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                     @else

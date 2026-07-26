@@ -80,5 +80,122 @@
                 <p class="text-xs uppercase tracking-widest text-paper/50 mt-1">{{ __('Concluídas') }}</p>
             </div>
         </div>
+
+        {{-- 🎯 ALTERADO: primeira versão da tabela de tarefas adicionada abaixo
+             dos indicadores do dashboard. Ela lista as tarefas já criadas pelo
+             usuário autenticado; a estrutura foi mantida simples para receber
+             as próximas melhorias solicitadas sem alterar a fonte dos dados. --}}
+        <div class="bg-paper rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-ink/10">
+                <h3 class="text-sm font-semibold uppercase tracking-widest text-ink/60">
+                    {{ __('Tarefas criadas') }}
+                </h3>
+
+                {{-- 🎯 ALTERADO: filtro por status adicionado à tabela do dashboard,
+                     seguindo os mesmos três valores usados em "Minhas Tarefas".
+                     O botão Limpar retorna à tabela completa. --}}
+                <form method="GET" action="{{ route('dashboard') }}" class="mt-4 flex flex-wrap items-end gap-3">
+                    <div>
+                        <label for="dashboard-status" class="block text-sm font-medium text-ink mb-1">
+                            Status
+                        </label>
+                        <select
+                            id="dashboard-status"
+                            name="status"
+                            class="border-ink/20 bg-paper text-ink focus:ring-ember focus:border-ember rounded-md shadow-sm text-sm">
+                            <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>Todos</option>
+                            <option value="Pendente" {{ $selectedStatus === 'Pendente' ? 'selected' : '' }}>Pendente</option>
+                            <option value="Fazendo" {{ $selectedStatus === 'Fazendo' ? 'selected' : '' }}>Fazendo</option>
+                            <option value="Concluída" {{ $selectedStatus === 'Concluída' ? 'selected' : '' }}>Concluída</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        {{-- 🎯 ALTERADO: prioridade adicionada ao filtro do dashboard;
+                             ela pode ser combinada com qualquer status selecionado. --}}
+                        <label for="dashboard-priority" class="block text-sm font-medium text-ink mb-1">
+                            Prioridade
+                        </label>
+                        <select
+                            id="dashboard-priority"
+                            name="priority"
+                            class="border-ink/20 bg-paper text-ink focus:ring-ember focus:border-ember rounded-md shadow-sm text-sm">
+                            <option value="all" {{ $selectedPriority === 'all' ? 'selected' : '' }}>Todas</option>
+                            <option value="low" {{ $selectedPriority === 'low' ? 'selected' : '' }}>Baixa</option>
+                            <option value="medium" {{ $selectedPriority === 'medium' ? 'selected' : '' }}>Média</option>
+                            <option value="high" {{ $selectedPriority === 'high' ? 'selected' : '' }}>Alta</option>
+                            <option value="urgent" {{ $selectedPriority === 'urgent' ? 'selected' : '' }}>Urgente!</option>
+                        </select>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-ember hover:bg-ember-dark text-paper font-semibold text-xs uppercase tracking-widest rounded-md transition ease-in-out duration-150">
+                        Filtrar
+                    </button>
+
+                    <a
+                        href="{{ route('dashboard') }}"
+                        class="inline-flex items-center px-4 py-2 bg-paper border-2 border-ink hover:bg-ink hover:text-paper text-ink font-semibold text-xs uppercase tracking-widest rounded-md transition ease-in-out duration-150">
+                        Limpar
+                    </a>
+                </form>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-ink/10">
+                    <thead class="bg-ink">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-paper/70">
+                                {{ __('Tarefa') }}
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-paper/70">
+                                {{ __('Status') }}
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-paper/70">
+                                {{ __('Prioridade') }}
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-paper/70">
+                                {{ __('Vencimento') }}
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-widest text-paper/70">
+                                {{ __('Criada em') }}
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-ink/10">
+                        @forelse ($tasks as $task)
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-medium text-ink">
+                                    {{ $task->title }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-ink/70">
+                                    {{ $task->status }}
+                                </td>
+                                <td class="px-6 py-4 text-sm">
+                                    {{-- 🎯 ALTERADO: o valor técnico salvo no banco
+                                         é apresentado somente pelo nome e pela cor
+                                         correspondente à prioridade. --}}
+                                    <x-task-priority :priority="$task->priority" />
+                                </td>
+                                <td class="px-6 py-4 text-sm text-ink/70 whitespace-nowrap">
+                                    {{ $task->due_datetime?->format('d/m/Y H:i') ?? '—' }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-ink/70 whitespace-nowrap">
+                                    {{ $task->created_at?->format('d/m/Y H:i') ?? '—' }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-sm text-ink/50">
+                                    {{ __('Nenhuma tarefa criada até o momento.') }}
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </x-app-layout>

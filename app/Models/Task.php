@@ -55,9 +55,20 @@ class Task extends Model
     // {
     //     return $query->where('status', $status);
     // }
-    const PRIORITY_LOW = 'low';
-    const PRIORITY_MEDIUM = 'medium';
-    const PRIORITY_HIGH = 'high';
+    // 🎯 ALTERADO: as quatro prioridades aceitas foram centralizadas no model.
+    // Os valores em inglês continuam sendo gravados na coluna `priority`, enquanto
+    // os rótulos em português, agora sem números, são usados nos formulários e listas.
+    public const PRIORITY_LOW = 'low';
+    public const PRIORITY_MEDIUM = 'medium';
+    public const PRIORITY_HIGH = 'high';
+    public const PRIORITY_URGENT = 'urgent';
+
+    public const PRIORITY_OPTIONS = [
+        self::PRIORITY_LOW => 'Baixa',
+        self::PRIORITY_MEDIUM => 'Média',
+        self::PRIORITY_HIGH => 'Alta',
+        self::PRIORITY_URGENT => 'Urgente!',
+    ];
 
 
     protected $casts = [

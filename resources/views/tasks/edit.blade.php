@@ -58,6 +58,36 @@
                 </div>
 
                 <div>
+                    {{-- 🎯 ALTERADO: a edição agora permite trocar a prioridade.
+                         O valor atual é pré-selecionado e a escrita muda de cor
+                         entre verde, amarelo, laranja e vermelho. --}}
+                    <div x-data="{ priority: '{{ old('priority', $task->priority ?? \App\Models\Task::PRIORITY_MEDIUM) }}' }">
+                        <label for="priority" class="block font-medium text-sm text-ink mb-1">
+                            Prioridade
+                        </label>
+                        <select
+                            id="priority"
+                            name="priority"
+                            x-model="priority"
+                            :class="{
+                                'text-green-600': priority === 'low',
+                                'text-yellow-600': priority === 'medium',
+                                'text-orange-600': priority === 'high',
+                                'text-red-700': priority === 'urgent'
+                            }"
+                            class="border-ink/20 bg-paper focus:ring-ember focus:border-ember rounded-md shadow-sm font-semibold">
+                            {{-- 🎯 ALTERADO: prioridade exibida somente pelo nome,
+                                 mantendo os mesmos valores técnicos persistidos. --}}
+                            <option class="text-green-600" value="low">Baixa</option>
+                            <option class="text-yellow-600" value="medium">Média</option>
+                            <option class="text-orange-600" value="high">Alta</option>
+                            <option class="text-red-700" value="urgent">Urgente!</option>
+                        </select>
+                        <x-input-error :messages="$errors->get('priority')" class="mt-2" />
+                    </div>
+                </div>
+
+                <div>
                     <label class="block font-medium text-sm text-ink mb-1">Status</label>
                     {{-- 🎨 ALTERADO: select estilizado; as 3 <option> e seus values
                          continuam idênticos ao original. --}}
@@ -67,6 +97,24 @@
                         <option value="Fazendo" {{ $task->status === 'Fazendo' ? 'selected' : '' }}>Fazendo</option>
                         <option value="Concluída" {{ $task->status === 'Concluída' ? 'selected' : '' }}>Concluída</option>
                     </select>
+                </div>
+
+                <div>
+                    {{-- 🎯 ALTERADO: o lembrete passou a ser editável. Informar uma
+                         nova data substitui o agendamento anterior; deixar vazio
+                         remove um lembrete futuro ainda não disparado. --}}
+                    <label for="reminder_datetime" class="block font-medium text-sm text-ink mb-1">
+                        Lembrete
+                    </label>
+                    <input
+                        id="reminder_datetime"
+                        type="datetime-local"
+                        name="reminder_datetime"
+                        value="{{ old('reminder_datetime', $reminder?->reminder_datetime?->format('Y-m-d\TH:i')) }}"
+                        min="{{ now()->format('Y-m-d\TH:i') }}"
+                        max="{{ $task->due_datetime?->format('Y-m-d\TH:i') }}"
+                        class="border-ink/20 bg-paper text-ink focus:border-ember focus:ring-ember rounded-md shadow-sm">
+                    <x-input-error :messages="$errors->get('reminder_datetime')" class="mt-2" />
                 </div>
 
                 <button type="submit"
