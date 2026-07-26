@@ -1,59 +1,91 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Tarefy
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicação Laravel para gerenciamento pessoal de tarefas, com autenticação,
+dashboard, perfil, prazos e lembretes processados em segundo plano.
 
-## About Laravel
+## Executar com Docker
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Requisitos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Docker Desktop
+- Docker Compose
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Subir o projeto
 
-## Learning Laravel
+O arquivo `.env.docker` já contém uma configuração local pronta e está ignorado
+pelo Git.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+docker compose up --build -d
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Depois que os serviços estiverem saudáveis, acesse:
 
-## Laravel Sponsors
+<http://localhost:8080>
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Na primeira inicialização, o container da aplicação aguarda o MySQL e executa
+automaticamente as migrations.
 
-### Premium Partners
+O serviço `vite` sincroniza `resources/views`, `resources/css` e `resources/js`
+com um volume interno rápido do Docker. Alterações nesses arquivos atualizam o
+navegador automaticamente após salvar, sem reconstruir a imagem ou pressionar
+F5.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Use `docker compose up --build -d` novamente ao alterar dependências,
+`vite.config.js`, o Dockerfile ou arquivos dentro de `docker/`.
 
-## Contributing
+### Serviços
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Serviço | Função |
+| --- | --- |
+| `web` | Nginx e acesso HTTP na porta 8080 |
+| `app` | PHP-FPM e aplicação Laravel |
+| `db` | MySQL 8.4 com volume persistente |
+| `queue` | Processamento dos jobs da fila |
+| `scheduler` | Execução do agendador do Laravel |
+| `vite` | HMR e atualização automática no navegador |
 
-## Code of Conduct
+### Comandos úteis
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Ver o estado dos containers:
 
-## Security Vulnerabilities
+```bash
+docker compose ps
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ver logs:
 
-## License
+```bash
+docker compose logs -f
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Executar um comando Artisan:
+
+```bash
+docker compose exec app php artisan about
+```
+
+Parar os containers:
+
+```bash
+docker compose down
+```
+
+Parar e remover também o banco, os uploads e os demais volumes:
+
+```bash
+docker compose down -v
+```
+
+> O comando com `-v` apaga os dados persistidos no ambiente Docker.
+
+## Configuração
+
+Para recriar o ambiente Docker:
+
+1. Copie `.env.docker.example` para `.env.docker`.
+2. Gere uma chave com `php artisan key:generate --show`.
+3. Coloque a chave gerada em `APP_KEY`.
+
+As credenciais presentes no exemplo são destinadas somente ao desenvolvimento
+local. Para outro ambiente, substitua todas as senhas e desative `APP_DEBUG`.

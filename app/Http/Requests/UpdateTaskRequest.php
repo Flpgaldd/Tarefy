@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidTaskDueDate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTaskRequest extends FormRequest
@@ -23,7 +24,9 @@ class UpdateTaskRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'due_datetime' => 'required|date',
+            // 🔒 ALTERADO: mesma regra usada no cadastro (StoreTaskRequest), pra
+            // manter a validação idêntica entre criar e editar uma tarefa.
+            'due_datetime' => ['required', new ValidTaskDueDate()],
             'status' => 'required|in:Pendente,Fazendo,Concluída',
             'status.in' => 'O status deve ser Pendente, Fazendo ou Concluída.',
         ];

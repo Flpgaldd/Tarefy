@@ -13,7 +13,7 @@
             {{ __('Criar Tarefa') }}
         </h2>
     </x-slot>
- 
+
     @if(session('msg') || session('error') || session('success'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
             {{-- 🎨 ALTERADO: mensagens de sessão agora em cartões, não texto solto.
@@ -23,9 +23,9 @@
             @if(session('success'))<p class="mb-2 px-4 py-3 rounded-md bg-ember/10 border border-ember text-ember-dark text-sm font-medium">{{ session('success') }}</p>@endif
         </div>
     @endif
- 
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
- 
+
         {{-- ===================== CRIAR TAREFA ===================== --}}
         {{-- 🎨 ALTERADO: cartão branco com borda esquerda laranja (mesmo padrão do
              header preto), inputs com classes de foco em ember, label em preto. --}}
@@ -42,7 +42,13 @@
                     <div class="flex flex-wrap gap-4">
                         <div>
                             <label class="block font-medium text-sm text-ink mb-1">Data de vencimento</label>
+                            {{-- 🔒 ALTERADO: min/max adicionados. Impede o usuário de escolher uma
+                                 data inválida direto no calendário do navegador, refletindo a mesma
+                                 regra aplicada no backend (ValidTaskDueDate): não antes de hoje/ano
+                                 atual, não além de 1 ano a partir de agora. --}}
                             <input type="datetime-local" name="due_datetime" required
+                                min="{{ now()->format('Y-m-d\TH:i') }}"
+                                max="{{ now()->addYear()->format('Y-m-d\TH:i') }}"
                                 class="border-ink/20 bg-paper text-ink focus:border-ember focus:ring-ember rounded-md shadow-sm">
                         </div>
                         <div>
@@ -52,7 +58,7 @@
                         </div>
                     </div>
                     <input type="hidden" name="status" value="Pendente">
- 
+
                     <button type="submit"
                         class="inline-flex items-center px-4 py-2 bg-ember border border-transparent rounded-md font-semibold text-xs text-paper uppercase tracking-widest hover:bg-ember-dark focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2 transition ease-in-out duration-150">
                         {{-- 🎨 ALTERADO: de style inline verde (#66db42) para classe bg-ember,
@@ -62,7 +68,7 @@
                 </form>
             </div>
         </div>
- 
+
         {{-- ===================== FILTROS ===================== --}}
         {{-- 🎨 ALTERADO: mesmo padrão de cartão, título em caixa alta discreto
              (eyebrow) em vez de <h4>/<hr> soltos. --}}
@@ -105,7 +111,7 @@
                 </form>
             </div>
         </div>
- 
+
         {{-- ===================== ESTATÍSTICAS ===================== --}}
         {{-- 🎨 ALTERADO: de parágrafos empilhados para 4 cartões pretos em grid,
              com o número em laranja grande — são os dados que devem ter "maior
@@ -128,7 +134,7 @@
                 <p class="text-xs uppercase tracking-widest text-paper/60 mt-1">Concluídas</p>
             </div>
         </div>
- 
+
         {{-- ===================== LISTA DE TAREFAS ===================== --}}
         {{-- 🎨 ALTERADO: de <div>/<hr> repetidos para cartões individuais com borda
              lateral colorida por status (preto=Pendente, laranja=Fazendo,
@@ -164,16 +170,49 @@
                             class="text-xs font-semibold uppercase tracking-widest text-ink hover:text-ember-dark transition">
                             Editar
                         </a>
-                        <form method="POST" action="{{ route('tasks.destroy', $task->id) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="inline-flex items-center px-3 py-1.5 bg-red-700 hover:bg-red-800 text-paper font-semibold text-xs uppercase tracking-widest rounded-md transition ease-in-out duration-150">
-                                Excluir
-                            </button>
-                        </form>
+                        <button type="button"
+                            onclick="document.getElementById('confirm-task-deletion-{{ $task->id }}').showModal()"
+                            class="inline-flex items-center px-3 py-1.5 bg-red-700 hover:bg-red-800 text-paper font-semibold text-xs uppercase tracking-widest rounded-md transition ease-in-out duration-150">
+                            Excluir
+                        </button>
                     </div>
                 </div>
+
+                <dialog
+                    id="confirm-task-deletion-{{ $task->id }}"
+                    aria-labelledby="confirm-task-deletion-title-{{ $task->id }}"
+                    class="fixed top-1/2 left-1/2 m-0 w-[calc(100%_-_2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 p-0 bg-transparent backdrop:bg-ink/75">
+                    <div class="bg-paper border-t-4 border-ember rounded-lg overflow-hidden shadow-xl">
+                        <div class="p-6">
+                            <h2 id="confirm-task-deletion-title-{{ $task->id }}" class="text-lg font-semibold text-ink">
+                                Excluir tarefa?
+                            </h2>
+
+                            <p class="mt-2 text-sm text-ink/60">
+                                Você tem certeza de que deseja excluir
+                                <strong class="text-ink">“{{ $task->title }}”</strong>?
+                                Essa ação não poderá ser desfeita.
+                            </p>
+
+                            <div class="mt-6 flex justify-end gap-3">
+                                <x-secondary-button
+                                    type="button"
+                                    onclick="this.closest('dialog').close()">
+                                    Cancelar
+                                </x-secondary-button>
+
+                                <form method="POST" action="{{ route('tasks.destroy', $task->id) }}">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <x-danger-button type="submit">
+                                        Sim, excluir
+                                    </x-danger-button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </dialog>
             @endforeach
         </div>
     </div>

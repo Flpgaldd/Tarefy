@@ -40,7 +40,20 @@
 
                 <div>
                     <label class="block font-medium text-sm text-ink mb-1">Data de vencimento</label>
-                    <input type="datetime-local" name="due_datetime" value="{{ $task->due_datetime }}"
+                    {{--
+                        🔒 ALTERADO (2 coisas):
+                        1. min/max adicionados, mesma regra do form de criar tarefa.
+                        2. value="{{ $task->due_datetime }}" foi trocado por
+                           ->format('Y-m-d\TH:i'). $task->due_datetime é um Carbon
+                           (tem $casts no model), então o value original saía como
+                           "2026-07-22 10:30:00" — formato que <input type="datetime-local">
+                           NÃO reconhece (precisa ser "2026-07-22T10:30"). Na prática,
+                           o campo provavelmente aparecia vazio ao abrir a tela de edição.
+                    --}}
+                    <input type="datetime-local" name="due_datetime"
+                        value="{{ $task->due_datetime?->format('Y-m-d\TH:i') }}"
+                        min="{{ now()->format('Y-m-d\TH:i') }}"
+                        max="{{ now()->addYear()->format('Y-m-d\TH:i') }}"
                         class="border-ink/20 bg-paper text-ink focus:border-ember focus:ring-ember rounded-md shadow-sm">
                 </div>
 

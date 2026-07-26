@@ -42,9 +42,9 @@ class TaskController extends Controller
             'due_datetime' => $request->due_datetime
             ]);
 
-        if ($request->filled('remind_at')) {
+        if ($request->filled('reminder_datetime')) {
             $task->reminders()->create([
-            'remind_at' => $request->remind_at
+                'reminder_datetime' => $request->reminder_datetime,
             ]);
         }
 
