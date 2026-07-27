@@ -185,4 +185,52 @@ window.notificationCenter = (config) => ({
     },
 });
 
+// 🎯 NOVO: controla o painel lateral de consulta rápida das tarefas. O painel
+// recebe apenas dados de exibição e não oferece nenhuma operação de edição.
+window.taskPreviewDrawer = () => ({
+    open: false,
+    task: null,
+    trigger: null,
+
+    show(task) {
+        this.trigger = document.activeElement;
+        this.task = task;
+        this.open = true;
+        document.body.classList.add('overflow-hidden');
+
+        // 🎯 NOVO: ao abrir, o foco vai para o botão de fechar para que a aba
+        // também seja simples de usar por teclado.
+        this.$nextTick(() => this.$refs.closeButton?.focus());
+    },
+
+    close() {
+        if (!this.open) {
+            return;
+        }
+
+        this.open = false;
+        document.body.classList.remove('overflow-hidden');
+
+        // 🎯 NOVO: o foco retorna ao nome da tarefa que abriu o painel.
+        this.$nextTick(() => this.trigger?.focus());
+    },
+
+    statusClasses() {
+        return {
+            Fazendo: 'border-orange-300 bg-orange-50 text-orange-700',
+            Concluída: 'border-green-300 bg-green-50 text-green-700',
+            Pendente: 'border-slate-300 bg-slate-50 text-slate-700',
+        }[this.task?.status] ?? 'border-slate-300 bg-slate-50 text-slate-700';
+    },
+
+    priorityClasses() {
+        return {
+            low: 'text-green-600',
+            medium: 'text-yellow-600',
+            high: 'text-orange-600',
+            urgent: 'text-red-700',
+        }[this.task?.priority] ?? 'text-yellow-600';
+    },
+});
+
 Alpine.start();

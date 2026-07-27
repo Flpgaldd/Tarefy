@@ -208,13 +208,13 @@
                 <div class="bg-paper border-l-4 {{ $borderColor }} rounded-lg shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
-                            {{-- 🎯 ALTERADO: o título agora abre a página completa
-                                 de detalhes e edição da tarefa. --}}
-                            <a
-                                href="{{ route('tasks.show', $task) }}"
-                                class="font-bold text-base text-ink hover:text-ember-dark hover:underline underline-offset-4 transition {{ $task->status === 'Concluída' ? 'line-through text-ink/50' : '' }}">
+                            {{-- 🎯 ALTERADO: clicar no nome agora abre somente a
+                                 aba lateral de consulta, sem entrar na edição. --}}
+                            <x-task-preview-trigger
+                                :task="$task"
+                                class="text-left font-bold text-base text-ink hover:text-ember-dark hover:underline underline-offset-4 transition {{ $task->status === 'Concluída' ? 'line-through text-ink/50' : '' }}">
                                 {{ $task->title }}
-                            </a>
+                            </x-task-preview-trigger>
                             {{-- 🎯 ALTERADO: o badge fixo de status virou um select
                                  que envia a alteração automaticamente para uma rota
                                  PATCH exclusiva ao escolher um dos três status. --}}
@@ -246,6 +246,8 @@
                         <p class="text-sm text-ink/60 mt-1">{{ $task->due_datetime }}</p>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
+                        {{-- 🎯 ALTERADO: este permanece como o único acesso da
+                             lista à página completa, onde a edição é permitida. --}}
                         <a href="{{ route('tasks.show', $task) }}"
                             class="text-xs font-semibold uppercase tracking-widest text-ink hover:text-ember-dark transition">
                             Ver detalhes

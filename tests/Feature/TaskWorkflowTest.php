@@ -259,6 +259,51 @@ class TaskWorkflowTest extends TestCase
     }
 
     /**
+     * 🎯 NOVO: garante que os nomes das tarefas abram a visualização rápida nas
+     * listas, enquanto somente "Ver detalhes" em Minhas Tarefas mantém o link
+     * para a página completa que contém a edição.
+     */
+    public function test_task_names_open_read_only_preview_and_only_details_link_opens_full_page(): void
+    {
+        $user = User::factory()->create();
+        $task = $user->tasks()->create([
+            'title' => 'Conferir relatório financeiro',
+            'description' => 'Validar valores e anexos antes do envio.',
+            'due_datetime' => now()->addDay()->setTime(14, 30),
+            'status' => 'Concluída',
+            'priority' => Task::PRIORITY_HIGH,
+        ]);
+        $detailsHref = 'href="'.route('tasks.show', $task).'"';
+
+        $this
+            ->actingAs($user)
+            ->get(route('tasks.index'))
+            ->assertOk()
+            ->assertSee('open-task-preview')
+            ->assertSee('data-task-preview')
+            ->assertSee('JSON.parse($el.dataset.taskPreview)', false)
+            ->assertSee('Esta aba é somente para consulta.')
+            ->assertSee('Ver detalhes')
+            ->assertSee($detailsHref, false);
+
+        // 🎯 NOVO: dashboard, perfil e agenda diária exibem a mesma consulta
+        // lateral, mas não oferecem um atalho direto para a página de edição.
+        foreach ([
+            route('dashboard'),
+            route('profile.perfil'),
+            route('tasks.by-date', ['date' => $task->due_datetime->format('Y-m-d')]),
+        ] as $listUrl) {
+            $this
+                ->actingAs($user)
+                ->get($listUrl)
+                ->assertOk()
+                ->assertSee('open-task-preview')
+                ->assertSee('Conferir relatório financeiro')
+                ->assertDontSee($detailsHref, false);
+        }
+    }
+
+    /**
      * 🎯 NOVO: o calendário do perfil aponta para uma agenda diária que mostra
      * apenas tarefas do usuário e da data escolhida, em ordem de horário.
      */
@@ -320,8 +365,11 @@ class TaskWorkflowTest extends TestCase
             ->assertSee('15:30')
             ->assertDontSee('Tarefa de outro dia')
             ->assertDontSee('Tarefa de outro usuário')
-            ->assertSee(route('tasks.show', $morningTask))
-            ->assertSee(route('tasks.show', $afternoonTask));
+            // 🎯 ALTERADO: a agenda diária não leva mais diretamente à edição;
+            // os nomes agora abrem o painel lateral compartilhado.
+            ->assertSee('open-task-preview')
+            ->assertDontSee('href="'.route('tasks.show', $morningTask).'"', false)
+            ->assertDontSee('href="'.route('tasks.show', $afternoonTask).'"', false);
     }
 
     /**

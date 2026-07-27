@@ -106,10 +106,9 @@
                     };
                 @endphp
 
-                {{-- 🎯 NOVO: cada cartão mostra primeiro o horário, seguido do
-                     título, status, prioridade e descrição, facilitando a leitura. --}}
-                <a
-                    href="{{ route('tasks.show', $task) }}"
+                {{-- 🎯 ALTERADO: o cartão diário deixou de ser um link para a
+                     edição; somente o nome abre a visualização lateral de leitura. --}}
+                <article
                     class="group block bg-paper border border-ink/10 rounded-xl shadow-sm hover:border-ember/60 hover:shadow-md transition">
                     <div class="grid sm:grid-cols-[110px_1fr_auto] sm:items-center gap-4 p-5">
                         <div class="sm:border-e sm:border-ink/10 sm:pe-5">
@@ -121,9 +120,11 @@
 
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="font-bold text-ink group-hover:text-ember-dark transition">
+                                <x-task-preview-trigger
+                                    :task="$task"
+                                    class="text-left font-bold text-ink group-hover:text-ember-dark hover:underline underline-offset-4 transition">
                                     {{ $task->title }}
-                                </h3>
+                                </x-task-preview-trigger>
                                 <span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {{ $statusClasses }}">
                                     {{ $task->status }}
                                 </span>
@@ -137,12 +138,13 @@
                             @endif
                         </div>
 
-                        <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ink/45 group-hover:text-ember-dark transition">
-                            Detalhes
-                            <span aria-hidden="true">→</span>
+                        {{-- 🎯 ALTERADO: a indicação esclarece que a consulta
+                             rápida acontece pelo nome, sem sugerir edição. --}}
+                        <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ink/35">
+                            Clique no nome
                         </span>
                     </div>
-                </a>
+                </article>
             @empty
                 <div class="rounded-xl border-2 border-dashed border-ink/15 bg-paper px-6 py-12 text-center">
                     <div class="w-12 h-12 mx-auto rounded-full bg-ink/5 text-ink/35 flex items-center justify-center">

@@ -168,13 +168,13 @@
                         @forelse ($tasks as $task)
                             <tr>
                                 <td class="px-6 py-4 text-sm font-medium text-ink">
-                                    {{-- 🎯 ALTERADO: tarefas da página inicial
-                                         também abrem a página única de detalhes. --}}
-                                    <a
-                                        href="{{ route('tasks.show', $task) }}"
-                                        class="hover:text-ember-dark hover:underline underline-offset-4 transition">
+                                    {{-- 🎯 ALTERADO: o nome abre a aba lateral de
+                                         leitura sem tirar o usuário do dashboard. --}}
+                                    <x-task-preview-trigger
+                                        :task="$task"
+                                        class="text-left hover:text-ember-dark hover:underline underline-offset-4 transition">
                                         {{ $task->title }}
-                                    </a>
+                                    </x-task-preview-trigger>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-ink/70">
                                     {{ $task->status }}

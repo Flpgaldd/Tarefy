@@ -195,13 +195,13 @@
                 <div class="space-y-2 max-h-[480px] overflow-y-auto pr-1">
                     @forelse($completedTasks as $task)
                         <div class="bg-ink-soft border-l-4 border-ember rounded-md px-4 py-3">
-                            {{-- 🎯 ALTERADO: até tarefas concluídas no perfil
-                                 podem ser abertas para consultar ou editar detalhes. --}}
-                            <a
-                                href="{{ route('tasks.show', $task) }}"
-                                class="text-paper/80 line-through hover:text-ember transition">
+                            {{-- 🎯 ALTERADO: tarefas concluídas abrem a consulta
+                                 rápida sem levar diretamente para a edição. --}}
+                            <x-task-preview-trigger
+                                :task="$task"
+                                class="text-left text-paper/80 line-through hover:text-ember transition">
                                 {{ $task->title }}
-                            </a>
+                            </x-task-preview-trigger>
                             @if($task->due_datetime)
                                 <p class="text-xs text-paper/40 mt-0.5">{{ $task->due_datetime->format('d/m/Y H:i') }}</p>
                             @endif

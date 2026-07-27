@@ -44,6 +44,10 @@
             <main>
                 {{ $slot }}
             </main>
+
+            {{-- 🎯 NOVO: o painel de visualização rápida fica no layout principal
+                 para poder ser aberto pelos nomes das tarefas em qualquer página. --}}
+            <x-task-preview-drawer />
         </div>
     </body>
 </html>
