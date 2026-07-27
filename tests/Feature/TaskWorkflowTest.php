@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Jobs\SendReminderTask;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\TaskDueNotification;
+use App\Services\TaskDueNotificationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -76,6 +78,88 @@ class TaskWorkflowTest extends TestCase
             'user_id' => $user->id,
             'title' => 'Resolver incidente crítico',
             'priority' => Task::PRIORITY_URGENT,
+        ]);
+    }
+
+    /**
+     * 🎯 NOVO: garante que a página exclusiva apresente os detalhes e todos os
+     * campos editáveis, sem permitir que outro usuário veja a mesma tarefa.
+     */
+    public function test_task_details_page_is_editable_only_by_its_owner(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $task = $owner->tasks()->create([
+            'title' => 'Planejar entrega do projeto',
+            'description' => 'Reunir todas as informações da entrega.',
+            'due_datetime' => now()->addDays(2),
+            'status' => 'Pendente',
+            'priority' => Task::PRIORITY_HIGH,
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('tasks.show', $task))
+            ->assertOk()
+            ->assertSee('Detalhes da Tarefa')
+            ->assertSee('Planejar entrega do projeto')
+            ->assertSee('Reunir todas as informações da entrega.')
+            ->assertSee('Tempo restante')
+            ->assertSee('name="title"', false)
+            ->assertSee('name="status"', false)
+            ->assertSee('name="priority"', false)
+            ->assertSee('name="due_datetime"', false)
+            ->assertSee('name="reminder_datetime"', false);
+
+        $this
+            ->actingAs($otherUser)
+            ->get(route('tasks.show', $task))
+            ->assertForbidden();
+    }
+
+    /**
+     * 🎯 NOVO: cobre a edição centralizada na página de detalhes, incluindo
+     * nome, descrição, status, prioridade, vencimento e lembrete.
+     */
+    public function test_all_task_details_can_be_updated_from_the_details_page(): void
+    {
+        $user = User::factory()->create();
+        $task = $user->tasks()->create([
+            'title' => 'Nome antigo',
+            'due_datetime' => now()->addDays(2),
+            'status' => 'Pendente',
+            'priority' => Task::PRIORITY_LOW,
+        ]);
+        $newDueDate = now()->addDays(4)->startOfMinute();
+        $newReminderDate = now()->addDay()->startOfMinute();
+
+        $response = $this
+            ->actingAs($user)
+            ->put(route('tasks.update', $task), [
+                'title' => 'Nome atualizado',
+                'description' => 'Descrição atualizada pela página de detalhes.',
+                'due_datetime' => $newDueDate->format('Y-m-d\TH:i'),
+                'reminder_datetime' => $newReminderDate->format('Y-m-d\TH:i'),
+                'status' => 'Fazendo',
+                'priority' => Task::PRIORITY_URGENT,
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('tasks.show', $task));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'title' => 'Nome atualizado',
+            'description' => 'Descrição atualizada pela página de detalhes.',
+            'status' => 'Fazendo',
+            'priority' => Task::PRIORITY_URGENT,
+            'due_datetime' => $newDueDate->format('Y-m-d H:i:s'),
+        ]);
+
+        $this->assertDatabaseHas('task_reminders', [
+            'task_id' => $task->id,
+            'reminder_datetime' => $newReminderDate->format('Y-m-d H:i:s'),
         ]);
     }
 
@@ -175,6 +259,86 @@ class TaskWorkflowTest extends TestCase
     }
 
     /**
+     * 🎯 NOVO: o calendário do perfil aponta para uma agenda diária que mostra
+     * apenas tarefas do usuário e da data escolhida, em ordem de horário.
+     */
+    public function test_profile_calendar_opens_tasks_organized_by_selected_date(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $selectedDate = now()->addDays(3)->startOfDay();
+
+        $afternoonTask = $user->tasks()->create([
+            'title' => 'Reunião da tarde',
+            'description' => 'Revisar o planejamento.',
+            'due_datetime' => $selectedDate->copy()->setTime(15, 30),
+            'status' => 'Fazendo',
+            'priority' => Task::PRIORITY_HIGH,
+        ]);
+
+        $morningTask = $user->tasks()->create([
+            'title' => 'Revisão da manhã',
+            'due_datetime' => $selectedDate->copy()->setTime(9, 0),
+            'status' => 'Pendente',
+            'priority' => Task::PRIORITY_LOW,
+        ]);
+
+        $user->tasks()->create([
+            'title' => 'Tarefa de outro dia',
+            'due_datetime' => $selectedDate->copy()->addDay()->setTime(10, 0),
+            'status' => 'Pendente',
+            'priority' => Task::PRIORITY_MEDIUM,
+        ]);
+
+        $otherUser->tasks()->create([
+            'title' => 'Tarefa de outro usuário',
+            'due_datetime' => $selectedDate->copy()->setTime(8, 0),
+            'status' => 'Pendente',
+            'priority' => Task::PRIORITY_URGENT,
+        ]);
+
+        $dateRoute = route('tasks.by-date', [
+            'date' => $selectedDate->format('Y-m-d'),
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('profile.perfil'))
+            ->assertOk()
+            ->assertSee($dateRoute);
+
+        $this
+            ->actingAs($user)
+            ->get($dateRoute)
+            ->assertOk()
+            ->assertSee('Tarefas do dia')
+            ->assertSeeInOrder([
+                $morningTask->title,
+                $afternoonTask->title,
+            ])
+            ->assertSee('09:00')
+            ->assertSee('15:30')
+            ->assertDontSee('Tarefa de outro dia')
+            ->assertDontSee('Tarefa de outro usuário')
+            ->assertSee(route('tasks.show', $morningTask))
+            ->assertSee(route('tasks.show', $afternoonTask));
+    }
+
+    /**
+     * 🎯 NOVO: datas inexistentes não são normalizadas silenciosamente para
+     * outro dia e retornam 404.
+     */
+    public function test_daily_task_page_rejects_an_invalid_date(): void
+    {
+        $user = User::factory()->create();
+
+        $this
+            ->actingAs($user)
+            ->get('/tasks/date/2026-02-31')
+            ->assertNotFound();
+    }
+
+    /**
      * 🎯 NOVO: valida o fluxo completo do job até a tabela notifications e os
      * endpoints usados pelo sino para listar e marcar o lembrete como lido.
      */
@@ -205,7 +369,9 @@ class TaskWorkflowTest extends TestCase
             ->getJson(route('notifications.index'))
             ->assertOk()
             ->assertJsonPath('unread_count', 1)
-            ->assertJsonPath('notifications.0.task_title', 'Enviar relatório mensal');
+            ->assertJsonPath('notifications.0.task_title', 'Enviar relatório mensal')
+            ->assertJsonPath('notifications.0.kind', 'reminder')
+            ->assertJsonPath('notifications.0.url', route('tasks.show', $task));
 
         $this
             ->actingAs($user)
@@ -214,6 +380,51 @@ class TaskWorkflowTest extends TestCase
             ->assertJsonPath('unread_count', 0);
 
         $this->assertNotNull($notification->fresh()->read_at);
+    }
+
+    /**
+     * 🎯 NOVO: uma tarefa vencida e Pendente recebe apenas um aviso adicional.
+     * Ao mudar para Fazendo, esse aviso some sem apagar lembretes comuns.
+     */
+    public function test_due_notification_is_unique_and_disappears_when_task_starts(): void
+    {
+        $user = User::factory()->create();
+        $task = $user->tasks()->create([
+            'title' => 'Atividade que venceu',
+            'due_datetime' => now()->subMinute(),
+            'status' => 'Pendente',
+            'priority' => Task::PRIORITY_HIGH,
+        ]);
+        $service = app(TaskDueNotificationService::class);
+
+        $this->assertSame(1, $service->notifyOverduePendingTasks());
+        $this->assertSame(0, $service->notifyOverduePendingTasks());
+
+        $notification = $user->notifications()
+            ->where('type', TaskDueNotification::class)
+            ->first();
+
+        $this->assertNotNull($notification);
+        $this->assertSame('due', $notification->data['kind']);
+        $this->assertSame(route('tasks.show', $task), $notification->data['url']);
+
+        // 🎯 ALTERADO: usa o formulário completo da página de detalhes e mantém
+        // o prazo vencido original, comprovando que só mudar para Fazendo é válido.
+        $this
+            ->actingAs($user)
+            ->put(route('tasks.update', $task), [
+                'title' => $task->title,
+                'description' => $task->description,
+                'due_datetime' => $task->due_datetime->format('Y-m-d\TH:i'),
+                'status' => 'Fazendo',
+                'priority' => $task->priority,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('tasks.show', $task));
+
+        $this->assertDatabaseMissing('notifications', [
+            'id' => $notification->id,
+        ]);
     }
 
     /**

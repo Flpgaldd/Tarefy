@@ -208,7 +208,13 @@
                 <div class="bg-paper border-l-4 {{ $borderColor }} rounded-lg shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <strong class="text-ink text-base {{ $task->status === 'Concluída' ? 'line-through text-ink/50' : '' }}">{{ $task->title }}</strong>
+                            {{-- 🎯 ALTERADO: o título agora abre a página completa
+                                 de detalhes e edição da tarefa. --}}
+                            <a
+                                href="{{ route('tasks.show', $task) }}"
+                                class="font-bold text-base text-ink hover:text-ember-dark hover:underline underline-offset-4 transition {{ $task->status === 'Concluída' ? 'line-through text-ink/50' : '' }}">
+                                {{ $task->title }}
+                            </a>
                             {{-- 🎯 ALTERADO: o badge fixo de status virou um select
                                  que envia a alteração automaticamente para uma rota
                                  PATCH exclusiva ao escolher um dos três status. --}}
@@ -240,9 +246,9 @@
                         <p class="text-sm text-ink/60 mt-1">{{ $task->due_datetime }}</p>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
-                        <a href="{{ route('tasks.edit', $task->id) }}"
+                        <a href="{{ route('tasks.show', $task) }}"
                             class="text-xs font-semibold uppercase tracking-widest text-ink hover:text-ember-dark transition">
-                            Editar
+                            Ver detalhes
                         </a>
                         <button type="button"
                             onclick="document.getElementById('confirm-task-deletion-{{ $task->id }}').showModal()"

@@ -26,9 +26,19 @@ class UpdateTaskRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
+            // 🎯 ALTERADO: a página de detalhes permite incluir ou editar a
+            // descrição completa da tarefa sem tornar o campo obrigatório.
+            'description' => 'nullable|string|max:5000',
             // 🔒 ALTERADO: mesma regra usada no cadastro (StoreTaskRequest), pra
             // manter a validação idêntica entre criar e editar uma tarefa.
-            'due_datetime' => ['required', new ValidTaskDueDate()],
+            // 🎯 ALTERADO: uma tarefa vencida pode preservar seu prazo original
+            // ao atualizar status/prioridade, mas não pode escolher outro prazo passado.
+            'due_datetime' => [
+                'required',
+                new ValidTaskDueDate(
+                    $this->route('task')?->due_datetime?->format('Y-m-d\TH:i'),
+                ),
+            ],
             'status' => 'required|in:Pendente,Fazendo,Concluída',
             // 🎯 ALTERADO: a edição agora valida e persiste os mesmos quatro
             // níveis de prioridade disponíveis no formulário de criação.

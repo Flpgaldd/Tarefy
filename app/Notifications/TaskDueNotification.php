@@ -5,7 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class TaskReminderNotification extends Notification
+class TaskDueNotification extends Notification
 {
     use Queueable;
 
@@ -16,8 +16,8 @@ class TaskReminderNotification extends Notification
     ) {}
 
     /**
-     * 🎯 NOVO: o lembrete usa o canal database para permanecer disponível no
-     * sino mesmo depois que o usuário fecha ou troca de página.
+     * 🎯 NOVO: o aviso automático de vencimento fica salvo no banco para ser
+     * exibido tanto no sino quanto no toast, independentemente da página aberta.
      *
      * @return array<int, string>
      */
@@ -27,23 +27,20 @@ class TaskReminderNotification extends Notification
     }
 
     /**
-     * 🎯 NOVO: estrutura persistida na tabela notifications e consumida pelo
-     * toast global e pelo dropdown do sino.
+     * 🎯 NOVO: `kind` diferencia este aviso do lembrete escolhido pelo usuário,
+     * permitindo usar destaque vermelho e removê-lo sem apagar outros avisos.
      *
      * @return array<string, int|string|null>
      */
     public function toDatabase(object $notifiable): array
     {
         return [
-            // 🎯 ALTERADO: o tipo permite diferenciar lembretes configurados dos
-            // novos avisos automáticos de vencimento no frontend.
-            'kind' => 'reminder',
+            'kind' => 'due',
             'task_id' => $this->taskId,
             'task_title' => $this->taskTitle,
-            'title' => 'Lembrete de tarefa',
-            'message' => "Está na hora de lembrar da tarefa “{$this->taskTitle}”.",
+            'title' => 'Tarefa vencida',
+            'message' => "A tarefa “{$this->taskTitle}” venceu e ainda está Pendente. Altere o status para Fazendo para remover este aviso.",
             'due_at' => $this->dueAt,
-            // 🎯 ALTERADO: clicar no lembrete agora abre os detalhes da tarefa.
             'url' => route('tasks.show', $this->taskId),
         ];
     }

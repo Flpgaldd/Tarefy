@@ -72,6 +72,11 @@ Route::prefix('tasks')->middleware('auth')->group(function () {
     Route::get('/search', [TaskController::class, 'search'])->name('tasks.search');
     Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
     Route::post('/', [TaskController::class, 'store'])->name('tasks.store');
+    // 🎯 NOVO: página organizada com todas as tarefas do dia escolhido no
+    // calendário do perfil. A restrição evita datas em formatos inesperados.
+    Route::get('/date/{date}', [TaskController::class, 'byDate'])
+        ->where('date', '\d{4}-\d{2}-\d{2}')
+        ->name('tasks.by-date');
     // 🎯 NOVO: endpoint dedicado ao seletor rápido de status da listagem.
     Route::patch('/{task}/status', [TaskController::class, 'updateStatus'])
         ->name('tasks.status.update');

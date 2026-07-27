@@ -7,63 +7,103 @@
         </div>
     </x-slot>
 
-    {{-- 🎨 ALTERADO: card de perfil continua estreito (max-w-3xl, faz sentido pra
-         informação pessoal), mas agora é um container SEPARADO do painel abaixo —
-         antes os dois dividiam o mesmo max-w-3xl, o que deixava o painel apertado
-         sem necessidade. --}}
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="bg-paper rounded-lg shadow-sm overflow-hidden">
+    {{-- 🎨 ALTERADO: foto, nome e e-mail foram reunidos em um hero de perfil
+         responsivo. O bloco usa o preto do header, o laranja das ações e o
+         branco do conteúdo para combinar com o restante da identidade Tarefy. --}}
+    {{-- 🎨 ALTERADO: o padding inferior foi reduzido para aproximar o painel das
+         informações do usuário sem deixar os dois cartões visualmente colados. --}}
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-3">
+        <section class="relative overflow-hidden bg-ink border border-ink-soft rounded-2xl shadow-xl">
+            <div class="absolute inset-x-0 top-0 h-1.5 bg-ember"></div>
+            <div class="pointer-events-none absolute -top-24 -end-24 w-64 h-64 rounded-full border border-ember/20"></div>
+            <div class="pointer-events-none absolute -top-14 -end-14 w-40 h-40 rounded-full border border-paper/10"></div>
 
-            {{-- ===================== FOTO DE PERFIL ===================== --}}
-            <div class="bg-ink px-6 pt-10 pb-16 flex flex-col items-center">
-                {{-- 🎯 ALTERADO: a borda cinza da foto principal do perfil foi
-                     trocada por branca, seguindo o novo padrão dos avatares. --}}
-                <div class="w-28 h-28 rounded-full bg-ember border-4 border-white flex items-center justify-center overflow-hidden">
-                    @if($user->avatar_url)
-                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
-                    @else
-                        <span class="text-3xl font-bold text-ink">
-                            {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+            <div class="relative px-6 py-10 sm:px-10 sm:py-12">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-7 sm:gap-9">
+
+                    {{-- 🎯 ALTERADO: avatar maior com borda branca, aro laranja e
+                         indicador decorativo, mantendo o fallback com a inicial. --}}
+                    <div class="relative shrink-0 self-center sm:self-auto">
+                        <div class="absolute -inset-2 rounded-full border border-paper/15"></div>
+                        <div class="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-ember border-4 border-white ring-4 ring-ember/30 flex items-center justify-center overflow-hidden shadow-2xl">
+                            @if($user->avatar_url)
+                                <img
+                                    src="{{ $user->avatar_url }}"
+                                    alt="Foto de perfil de {{ $user->name }}"
+                                    class="w-full h-full object-cover">
+                            @else
+                                <span class="text-4xl font-bold text-ink">
+                                    {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+                                </span>
+                            @endif
+                        </div>
+
+                        <span class="absolute bottom-1 end-1 w-9 h-9 rounded-full bg-ember border-4 border-ink flex items-center justify-center shadow-lg">
+                            <svg class="w-4 h-4 text-paper" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12l4 4L19 6" />
+                            </svg>
                         </span>
-                    @endif
+                    </div>
+
+                    {{-- 🎯 ALTERADO: nome e e-mail ganharam hierarquia visual,
+                         melhor contraste e ícone de identificação da conta. --}}
+                    <div class="min-w-0 flex-1 text-center sm:text-left">
+                        <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ember">
+                            <span class="w-2 h-2 rounded-full bg-ember"></span>
+                            Perfil pessoal
+                        </div>
+
+                        <h1 class="mt-3 text-3xl sm:text-4xl font-bold text-paper break-words">
+                            {{ $user->name }}
+                        </h1>
+
+                        <div class="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-paper/10 bg-paper/5 px-4 py-2 text-sm text-paper/65">
+                            <svg class="w-4 h-4 shrink-0 text-ember" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5A2.25 2.25 0 0119.5 19.5h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0l-8.69 5.517a2 2 0 01-2.12 0L2.25 6.75" />
+                            </svg>
+                            <span class="truncate">{{ $user->email }}</span>
+                        </div>
+                    </div>
+
+                    {{-- 🎯 ALTERADO: ação de edição integrada ao cabeçalho do
+                         perfil, com ícone e comportamento responsivo. --}}
+                    <a
+                        href="{{ route('profile.edit') }}"
+                        class="inline-flex self-center sm:self-auto items-center justify-center gap-2 px-5 py-3 bg-ember hover:bg-ember-dark text-paper font-semibold text-xs uppercase tracking-widest rounded-lg shadow-lg transition ease-in-out duration-150">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.862 4.487zM19.5 7.125L16.875 4.5M18 13.5V19.125A1.875 1.875 0 0116.125 21H4.875A1.875 1.875 0 013 19.125V7.875A1.875 1.875 0 014.875 6H10.5" />
+                        </svg>
+                        {{ __('Editar Perfil') }}
+                    </a>
                 </div>
             </div>
 
-            {{-- ===================== NOME + EMAIL ===================== --}}
-            <div class="px-6 -mt-8 pb-6">
-                <div class="bg-paper rounded-lg text-center pt-2">
-                    <h1 class="text-2xl font-bold text-ink">{{ $user->name }} </h1>
-                    <p class="text-sm text-ink/60 mt-1">{{ $user->email }}</p>
+            {{-- 🎨 ALTERADO: a biografia permanece junto da identificação, mas
+                 em uma área branca para equilibrar o contraste do cartão. --}}
+            <div class="relative bg-paper px-6 py-6 sm:px-10">
+                <div class="flex items-start gap-4">
+                    <span class="w-10 h-10 rounded-full bg-ink text-ember flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM3.75 19.5a8.25 8.25 0 0116.5 0" />
+                        </svg>
+                    </span>
+
+                    <div>
+                        <h2 class="text-xs font-semibold uppercase tracking-widest text-ink/45">
+                            {{ __('Sobre') }}
+                        </h2>
+
+                        @if(isset($user->bio) && $user->bio)
+                            <p class="mt-2 text-ink leading-relaxed">{{ $user->bio }}</p>
+                        @else
+                            <p class="mt-2 text-ink/50 italic leading-relaxed">
+                                {{ __('Você ainda não escreveu nada sobre você. Conte um pouco sobre o que você faz.') }}
+                            </p>
+                        @endif
+                    </div>
                 </div>
             </div>
-
-            <div class="border-t border-ink/10"></div>
-
-            {{-- ===================== DESCRIÇÃO (BIO) ===================== --}}
-            <div class="px-6 py-6">
-                <h3 class="text-sm font-semibold uppercase tracking-widest text-ink/60 mb-3">
-                    {{ __('Sobre') }}
-                </h3>
-
-                @if(isset($user->bio) && $user->bio)
-                    <p class="text-ink leading-relaxed">{{ $user->bio }}</p>
-                @else
-                    <p class="text-ink/50 italic leading-relaxed">
-                        {{ __('Você ainda não escreveu nada sobre você. Conte um pouco sobre o que você faz.') }}
-                    </p>
-                @endif
-            </div>
-
-            <div class="border-t border-ink/10"></div>
-
-            {{-- ===================== AÇÃO ===================== --}}
-            <div class="px-6 py-6 flex justify-center">
-                <a href="{{ route('profile.edit') }}"
-                    class="inline-flex items-center px-6 py-2.5 bg-ember hover:bg-ember-dark text-paper font-semibold text-xs uppercase tracking-widest rounded-md transition ease-in-out duration-150">
-                    {{ __('Editar Perfil') }}
-                </a>
-            </div>
-        </div>
+        </section>
     </div>
 
     {{--
@@ -79,7 +119,9 @@
            texto branco por cima.
         =========================================================================
     --}}
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-5 py-8">
+    {{-- 🎨 ALTERADO: o painel sobe com `pt-3`, diminuindo o antigo espaço vazio
+         entre perfil, indicadores, tarefas concluídas e calendário. --}}
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-5 pt-3 pb-8">
         <h2 class="text-sm font-semibold uppercase tracking-widest text-ink/60 mb-4">
             {{ __('Painel') }}
         </h2>
@@ -153,7 +195,13 @@
                 <div class="space-y-2 max-h-[480px] overflow-y-auto pr-1">
                     @forelse($completedTasks as $task)
                         <div class="bg-ink-soft border-l-4 border-ember rounded-md px-4 py-3">
-                            <p class="text-paper/80 line-through">{{ $task->title }}</p>
+                            {{-- 🎯 ALTERADO: até tarefas concluídas no perfil
+                                 podem ser abertas para consultar ou editar detalhes. --}}
+                            <a
+                                href="{{ route('tasks.show', $task) }}"
+                                class="text-paper/80 line-through hover:text-ember transition">
+                                {{ $task->title }}
+                            </a>
                             @if($task->due_datetime)
                                 <p class="text-xs text-paper/40 mt-0.5">{{ $task->due_datetime->format('d/m/Y H:i') }}</p>
                             @endif
@@ -186,7 +234,7 @@
                 </div>
 
                 <p class="text-xs text-paper/40 mb-3">
-                    {{ __('Dias com bolinha laranja têm alguma tarefa marcada.') }}
+                    {{ __('Dias destacados possuem tarefas. Clique para ver a programação completa.') }}
                 </p>
 
                 {{-- -------- VISÃO MENSAL -------- --}}
@@ -215,13 +263,24 @@
                                 $isCurrentMonth = $cursor->month === $currentMonth;
                                 $isToday = $dateKey === $today;
                             @endphp
-                            <div class="aspect-square flex flex-col items-center justify-center rounded-md text-xs
-                                {{ $isToday ? 'bg-ember text-paper font-bold' : ($isCurrentMonth ? 'text-paper' : 'text-paper/20') }}">
-                                <span>{{ $cursor->day }}</span>
-                                @if($hasTasks)
+                            @if($hasTasks)
+                                {{-- 🎯 ALTERADO: somente dias que possuem tarefas
+                                     viram links para a nova agenda diária. --}}
+                                <a
+                                    href="{{ route('tasks.by-date', ['date' => $dateKey]) }}"
+                                    title="Ver tarefas de {{ $cursor->format('d/m/Y') }}"
+                                    aria-label="Ver tarefas de {{ $cursor->format('d/m/Y') }}"
+                                    class="aspect-square flex flex-col items-center justify-center rounded-md text-xs font-bold ring-1 ring-ember/40 transition hover:bg-ember hover:text-paper hover:ring-ember focus:outline-none focus:ring-2 focus:ring-paper
+                                        {{ $isToday ? 'bg-ember text-paper' : ($isCurrentMonth ? 'bg-ember/10 text-paper' : 'bg-ember/5 text-paper/50') }}">
+                                    <span>{{ $cursor->day }}</span>
                                     <span class="w-1.5 h-1.5 rounded-full bg-ember mt-0.5 {{ $isToday ? 'bg-paper' : '' }}"></span>
-                                @endif
-                            </div>
+                                </a>
+                            @else
+                                <div class="aspect-square flex flex-col items-center justify-center rounded-md text-xs
+                                    {{ $isToday ? 'bg-ember text-paper font-bold' : ($isCurrentMonth ? 'text-paper' : 'text-paper/20') }}">
+                                    <span>{{ $cursor->day }}</span>
+                                </div>
+                            @endif
                             @php $cursor->addDay(); @endphp
                         @endwhile
                     </div>
@@ -242,25 +301,38 @@
                                 $count = $taskDates->get($dateKey, 0);
                                 $isToday = $dateKey === $today;
                             @endphp
-                            <div class="flex items-center justify-between px-3 py-2 rounded-md {{ $isToday ? 'bg-ember' : 'bg-ink-soft' }}">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-semibold uppercase text-paper/70">
-                                        {{ $day->translatedFormat('D') }}
-                                    </span>
-                                    <span class="text-sm font-bold text-paper">
-                                        {{ $day->format('d/m') }}
-                                    </span>
-                                </div>
-
-                                @if($count > 0)
+                            @if($count > 0)
+                                {{-- 🎯 ALTERADO: na visão semanal, toda a linha do
+                                     dia com tarefa também é clicável. --}}
+                                <a
+                                    href="{{ route('tasks.by-date', ['date' => $dateKey]) }}"
+                                    class="flex items-center justify-between px-3 py-2 rounded-md transition hover:bg-ember focus:outline-none focus:ring-2 focus:ring-paper {{ $isToday ? 'bg-ember' : 'bg-ink-soft ring-1 ring-ember/30' }}">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold uppercase text-paper/70">
+                                            {{ $day->translatedFormat('D') }}
+                                        </span>
+                                        <span class="text-sm font-bold text-paper">
+                                            {{ $day->format('d/m') }}
+                                        </span>
+                                    </div>
                                     <span class="inline-flex items-center gap-1 text-xs font-semibold text-paper">
                                         <span class="w-1.5 h-1.5 rounded-full bg-paper"></span>
                                         {{ $count }} {{ $count === 1 ? __('tarefa') : __('tarefas') }}
                                     </span>
-                                @else
+                                </a>
+                            @else
+                                <div class="flex items-center justify-between px-3 py-2 rounded-md {{ $isToday ? 'bg-ember' : 'bg-ink-soft' }}">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-semibold uppercase text-paper/70">
+                                            {{ $day->translatedFormat('D') }}
+                                        </span>
+                                        <span class="text-sm font-bold text-paper">
+                                            {{ $day->format('d/m') }}
+                                        </span>
+                                    </div>
                                     <span class="text-xs text-paper/30">—</span>
-                                @endif
-                            </div>
+                                </div>
+                            @endif
                         @endfor
                     </div>
                 </div>

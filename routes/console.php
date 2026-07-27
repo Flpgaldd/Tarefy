@@ -2,6 +2,7 @@
 
 use App\Jobs\SendReminderTask;
 use App\Models\TaskReminder;
+use App\Services\TaskDueNotificationService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -30,5 +31,14 @@ Schedule::call(function (): void {
         });
 })
     ->name('dispatch-task-reminders')
+    ->withoutOverlapping()
+    ->everyMinute();
+
+// 🎯 NOVO: a cada minuto procura tarefas vencidas que continuam Pendentes.
+// Cada tarefa recebe no máximo um aviso, controlado pelo serviço compartilhado.
+Schedule::call(function (): void {
+    app(TaskDueNotificationService::class)->notifyOverduePendingTasks();
+})
+    ->name('dispatch-due-task-notifications')
     ->withoutOverlapping()
     ->everyMinute();

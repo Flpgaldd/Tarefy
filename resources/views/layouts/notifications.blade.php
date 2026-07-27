@@ -74,7 +74,11 @@
                     <div class="flex items-start gap-3">
                         <span
                             class="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0"
-                            :class="notification.read ? 'bg-ink/20' : 'bg-ember'">
+                            {{-- 🎯 ALTERADO: vencimentos usam vermelho; lembretes
+                                 continuam usando o laranja original do projeto. --}}
+                            :class="notification.read
+                                ? 'bg-ink/20'
+                                : (notification.kind === 'due' ? 'bg-red-600' : 'bg-ember')">
                         </span>
                         <span class="min-w-0">
                             <span class="block text-sm font-bold text-ink" x-text="notification.title"></span>
@@ -96,9 +100,14 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-x-0"
         x-transition:leave-end="opacity-0 translate-x-6"
-        class="fixed z-[100] top-20 end-4 w-[calc(100vw_-_2rem)] max-w-sm overflow-hidden rounded-xl border-l-4 border-ember bg-ink shadow-2xl">
+        :class="toast?.kind === 'due' ? 'border-red-600' : 'border-ember'"
+        class="fixed z-[100] top-20 end-4 w-[calc(100vw_-_2rem)] max-w-sm overflow-hidden rounded-xl border-l-4 bg-ink shadow-2xl">
         <div class="flex items-start gap-3 p-4">
-            <span class="w-10 h-10 rounded-full bg-ember/15 text-ember flex items-center justify-center shrink-0">
+            <span
+                :class="toast?.kind === 'due'
+                    ? 'bg-red-600/15 text-red-400'
+                    : 'bg-ember/15 text-ember'"
+                class="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

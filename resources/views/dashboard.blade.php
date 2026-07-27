@@ -168,7 +168,13 @@
                         @forelse ($tasks as $task)
                             <tr>
                                 <td class="px-6 py-4 text-sm font-medium text-ink">
-                                    {{ $task->title }}
+                                    {{-- 🎯 ALTERADO: tarefas da página inicial
+                                         também abrem a página única de detalhes. --}}
+                                    <a
+                                        href="{{ route('tasks.show', $task) }}"
+                                        class="hover:text-ember-dark hover:underline underline-offset-4 transition">
+                                        {{ $task->title }}
+                                    </a>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-ink/70">
                                     {{ $task->status }}

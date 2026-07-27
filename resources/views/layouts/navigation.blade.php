@@ -29,9 +29,11 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Home') }}
+                        {{ __('Inicio') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.index')">
+                    {{-- 🎯 ALTERADO: "Minhas Tarefas" permanece ativo também na
+                         nova página de detalhes e nas demais rotas de tarefa. --}}
+                    <x-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.*')">
                         {{ __('Minhas Tarefas') }}
                     </x-nav-link>
                      <x-nav-link :href="route('profile.perfil')" :active="request()->routeIs('profile.perfil')">

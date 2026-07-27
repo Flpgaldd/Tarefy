@@ -19,6 +19,15 @@ use Illuminate\Contracts\Validation\ValidationRule;
  */
 class ValidTaskDueDate implements ValidationRule
 {
+    /**
+     * 🎯 ALTERADO: na edição, uma tarefa já vencida pode manter exatamente seu
+     * prazo original. Isso permite trocar o status para Fazendo sem obrigar o
+     * usuário a falsificar uma nova data futura.
+     */
+    public function __construct(
+        private readonly ?string $allowedExistingPastValue = null,
+    ) {}
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         // Formato exato enviado por <input type="datetime-local">: AAAA-MM-DDTHH:MM
@@ -53,7 +62,10 @@ class ValidTaskDueDate implements ValidationRule
 
         // 🎯 ALTERADO: a comparação usa o mesmo fuso e precisão de minutos do
         // campo HTML, evitando a antiga diferença artificial de três horas.
-        if ($date->lessThan(now()->startOfMinute())) {
+        $isUnchangedExistingPastValue = $this->allowedExistingPastValue !== null
+            && $date->format('Y-m-d\TH:i') === $this->allowedExistingPastValue;
+
+        if ($date->lessThan(now()->startOfMinute()) && ! $isUnchangedExistingPastValue) {
             $fail('A data de vencimento precisa ser igual ou posterior ao horário atual.');
 
             return;

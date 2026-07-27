@@ -16,16 +16,38 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notifications = $user->notifications()
+        $notificationItems = $user->notifications()
             ->latest()
             ->limit(20)
-            ->get()
+            ->get();
+
+        // 🎯 ALTERADO: os IDs válidos são carregados em uma única consulta.
+        // Assim, notificações antigas também abrem a nova página de detalhes,
+        // sem permitir que um ID pertencente a outro usuário seja acessado.
+        $taskIds = $notificationItems
+            ->pluck('data.task_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $ownedTaskIds = $user->tasks()
+            ->whereKey($taskIds)
+            ->pluck('id')
+            ->map(fn (int $id): string => (string) $id)
+            ->all();
+
+        $notifications = $notificationItems
             ->map(fn (DatabaseNotification $notification): array => [
                 'id' => $notification->id,
                 'title' => $notification->data['title'] ?? 'Lembrete de tarefa',
                 'message' => $notification->data['message'] ?? '',
                 'task_title' => $notification->data['task_title'] ?? null,
-                'url' => $notification->data['url'] ?? route('tasks.index'),
+                // 🎯 ALTERADO: `kind` controla a aparência distinta do aviso
+                // de vencimento no sino e no toast.
+                'kind' => $notification->data['kind'] ?? 'reminder',
+                'url' => in_array((string) ($notification->data['task_id'] ?? ''), $ownedTaskIds, true)
+                    ? route('tasks.show', $notification->data['task_id'])
+                    : route('tasks.index'),
                 'read' => $notification->read_at !== null,
                 'created_at' => $notification->created_at?->diffForHumans(),
             ]);

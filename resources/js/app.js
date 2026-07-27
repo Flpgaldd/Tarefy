@@ -4,6 +4,55 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+// 🎯 NOVO: contagem regressiva reutilizável da página de detalhes. O cálculo
+// recebe o ISO 8601 com fuso do Laravel e exibe somente dias, horas e minutos.
+window.taskCountdown = (dueAt) => ({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    expired: false,
+    timer: null,
+
+    // 🎯 ALTERADO: os métodos de ciclo de vida do Alpine iniciam e encerram o
+    // relógio automaticamente quando o usuário entra ou sai da página.
+    init() {
+        this.start();
+    },
+
+    destroy() {
+        this.stop();
+    },
+
+    start() {
+        this.update();
+        this.timer = window.setInterval(() => this.update(), 30000);
+    },
+
+    stop() {
+        window.clearInterval(this.timer);
+    },
+
+    update() {
+        const targetTimestamp = new Date(dueAt).getTime();
+
+        if (Number.isNaN(targetTimestamp)) {
+            this.stop();
+            return;
+        }
+
+        const difference = targetTimestamp - Date.now();
+        this.expired = difference < 0;
+
+        // 🎯 NOVO: arredondar para cima evita mostrar zero minutos enquanto
+        // ainda restam alguns segundos antes do vencimento.
+        const totalMinutes = Math.ceil(Math.abs(difference) / 60000);
+
+        this.days = Math.floor(totalMinutes / 1440);
+        this.hours = Math.floor((totalMinutes % 1440) / 60);
+        this.minutes = totalMinutes % 60;
+    },
+});
+
 // 🎯 ALTERADO: central global usada pelo sino e pelo toast de lembretes.
 // Ela consulta o backend periodicamente, mantém o contador de não lidas,
 // evita repetir o mesmo toast na sessão e permite marcar notificações como lidas.
